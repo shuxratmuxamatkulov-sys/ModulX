@@ -19,11 +19,13 @@ def get_main_keyboard():
     btn_add_yarn = types.InlineKeyboardButton("➕ Yangi ip kirim qilish", callback_data="add_yarn")
     btn_add_fabric = types.InlineKeyboardButton("➕ Yangi mato kirim qilish", callback_data="add_fabric")
     btn_orders = types.InlineKeyboardButton("📋 Buyurtmalar", callback_data="get_orders")
+    btn_add_order = types.InlineKeyboardButton("➕ Yangi buyurtma", callback_data="add_order")
     btn_status = types.InlineKeyboardButton("🟢 API Status", callback_data="get_status")
 
     keyboard.add(btn_yarns, btn_fabrics)
     keyboard.add(btn_add_yarn, btn_add_fabric)
-    keyboard.add(btn_orders, btn_status)
+    keyboard.add(btn_orders, btn_add_order)
+    keyboard.add(btn_status)
     return keyboard
 
 
@@ -54,12 +56,16 @@ def callback_listener(call):
         msg = bot.send_message(call.message.chat.id,
                                "🏭 **Yangi mato nomini kiriting:**\n\n*(Masalan: Suprem 100% Xlopok)*")
         bot.register_next_step_handler(msg, process_fabric_name)
+    elif call.data == "add_order":
+        msg = bot.send_message(call.message.chat.id,
+                               "📋 **Buyurtmachi (mijoz) nomini kiriting:**\n\n*(Masalan: 'FEN TEXTILE' MCHJ)*")
+        bot.register_next_step_handler(msg, process_order_client)
 
 
 # --- IP OMBORI KO'RISH VA KIRIM QILISH ---
 def fetch_yarns(message):
     try:
-        response = requests.get(f"{API_BASE_URL}yarns/", timeout=5)
+        response = requests.get(f"{API_BASE_URL}yarns/", timeout=15)
         if response.status_code == 200:
             yarns = response.json()
             if not yarns:
@@ -83,6 +89,8 @@ def fetch_yarns(message):
         else:
             bot.send_message(message.chat.id, f"❌ API xatosi (Status code: {response.status_code})",
                              reply_markup=get_main_keyboard())
+    except requests.exceptions.Timeout:
+        bot.send_message(message.chat.id, "⏳ Server javob berishda kechikmoqda, iltimos qaytadan urinib ko'ring.", reply_markup=get_main_keyboard())
     except Exception as e:
         bot.send_message(message.chat.id, f"⚠️ Ulanishda xatolik: {e}", reply_markup=get_main_keyboard())
 
@@ -100,13 +108,16 @@ def process_yarn_quantity(message):
         quantity = float(message.text.replace(',', '.'))
         yarn_title = user_data[chat_id]['title']
 
-        # REST API ga POST so'rov yuboramiz
         payload = {
+            'name': yarn_title,
             'title': yarn_title,
-            'quantity_kg': quantity
+            'quantity': quantity,
+            'quantity_kg': quantity,
+            'amount': quantity,
+            'amount_kg': quantity
         }
 
-        response = requests.post(f"{API_BASE_URL}yarns/", json=payload, timeout=5)
+        response = requests.post(f"{API_BASE_URL}yarns/", json=payload, timeout=15)
         if response.status_code in [200, 201]:
             bot.send_message(
                 chat_id,
@@ -121,6 +132,8 @@ def process_yarn_quantity(message):
     except ValueError:
         msg = bot.send_message(chat_id, "⚠️ Iltimos, miqdorni faqat sonlarda kiriting (Masalan: 250.5):")
         bot.register_next_step_handler(msg, process_yarn_quantity)
+    except requests.exceptions.Timeout:
+        bot.send_message(chat_id, "⏳ Server javob berishda kechikmoqda. Iltimos qaytadan urinib ko'ring.", reply_markup=get_main_keyboard())
     except Exception as e:
         bot.send_message(chat_id, f"⚠️ Server bilan ulanishda xatolik: {e}", reply_markup=get_main_keyboard())
 
@@ -128,7 +141,7 @@ def process_yarn_quantity(message):
 # --- MATO OMBORI KO'RISH VA KIRIM QILISH ---
 def fetch_fabrics(message):
     try:
-        response = requests.get(f"{API_BASE_URL}fabrics/", timeout=5)
+        response = requests.get(f"{API_BASE_URL}fabrics/", timeout=15)
         if response.status_code == 200:
             fabrics = response.json()
             if not fabrics:
@@ -152,6 +165,8 @@ def fetch_fabrics(message):
         else:
             bot.send_message(message.chat.id, f"❌ API xatosi (Status code: {response.status_code})",
                              reply_markup=get_main_keyboard())
+    except requests.exceptions.Timeout:
+        bot.send_message(message.chat.id, "⏳ Server javob berishda kechikmoqda, iltimos qaytadan urinib ko'ring.", reply_markup=get_main_keyboard())
     except Exception as e:
         bot.send_message(message.chat.id, f"⚠️ Ulanishda xatolik: {e}", reply_markup=get_main_keyboard())
 
@@ -170,11 +185,15 @@ def process_fabric_quantity(message):
         fabric_title = user_data[chat_id]['title']
 
         payload = {
+            'name': fabric_title,
             'title': fabric_title,
-            'quantity_kg': quantity
+            'quantity': quantity,
+            'quantity_kg': quantity,
+            'amount': quantity,
+            'amount_kg': quantity
         }
 
-        response = requests.post(f"{API_BASE_URL}fabrics/", json=payload, timeout=5)
+        response = requests.post(f"{API_BASE_URL}fabrics/", json=payload, timeout=15)
         if response.status_code in [200, 201]:
             bot.send_message(
                 chat_id,
@@ -189,14 +208,16 @@ def process_fabric_quantity(message):
     except ValueError:
         msg = bot.send_message(chat_id, "⚠️ Iltimos, miqdorni faqat sonlarda kiriting (Masalan: 120):")
         bot.register_next_step_handler(msg, process_fabric_quantity)
+    except requests.exceptions.Timeout:
+        bot.send_message(chat_id, "⏳ Server javob berishda kechikmoqda. Iltimos qaytadan urinib ko'ring.", reply_markup=get_main_keyboard())
     except Exception as e:
         bot.send_message(chat_id, f"⚠️ Server bilan ulanishda xatolik: {e}", reply_markup=get_main_keyboard())
 
 
-# --- QO'SHIMCHA FUNKSIYALAR ---
+# --- BUYURTMALAR KO'RISH VA QO'SHISH ---
 def fetch_orders(message):
     try:
-        response = requests.get(f"{API_BASE_URL}orders/", timeout=5)
+        response = requests.get(f"{API_BASE_URL}orders/", timeout=15)
         if response.status_code == 200:
             orders = response.json()
             if not orders:
@@ -207,27 +228,118 @@ def fetch_orders(message):
             text = "📋 **Ishlab chiqarish buyurtmalari:**\n\n"
             for item in orders:
                 order_id = item.get('id', '')
+                title = item.get('title') or item.get('name') or item.get('client_name') or f"Buyurtma #{order_id}"
                 status = item.get('status', 'Noma\'lum')
-                quantity = item.get('quantity') or item.get('amount') or 0
-                text += f"• **Buyurtma #{order_id}**: {quantity} kg/rulon | Status: {status}\n"
+                quantity = item.get('target_kg') or item.get('quantity') or item.get('amount') or 0
+                text += f"• **{title}**: {quantity} kg | Status: {status}\n"
 
             bot.send_message(message.chat.id, text, reply_markup=get_main_keyboard(), parse_mode='Markdown')
         else:
             bot.send_message(message.chat.id, f"❌ API xatosi (Status code: {response.status_code})",
                              reply_markup=get_main_keyboard())
+    except requests.exceptions.Timeout:
+        bot.send_message(message.chat.id, "⏳ Server javob berishda kechikmoqda, iltimos qaytadan urinib ko'ring.", reply_markup=get_main_keyboard())
     except Exception as e:
         bot.send_message(message.chat.id, f"⚠️ Ulanishda xatolik: {e}", reply_markup=get_main_keyboard())
 
 
+def process_order_client(message):
+    chat_id = message.chat.id
+    user_data[chat_id] = {'client': message.text}
+    msg = bot.send_message(chat_id, "🏭 **Buyurtma qaysi mato uchun? Mato nomini kiriting:**\n\n*(Masalan: Suprem 100% Xlopok)*")
+    bot.register_next_step_handler(msg, process_order_fabric)
+
+
+def process_order_fabric(message):
+    chat_id = message.chat.id
+    user_data[chat_id]['fabric'] = message.text
+    msg = bot.send_message(chat_id, f"⚖️ **'{user_data[chat_id]['client']}'** uchun rejadagi miqdorni kiriting (kg):")
+    bot.register_next_step_handler(msg, process_order_quantity)
+
+
+def process_order_quantity(message):
+    chat_id = message.chat.id
+    try:
+        quantity = float(message.text.replace(',', '.'))
+        client_name = user_data[chat_id]['client']
+        fabric_name = user_data[chat_id]['fabric']
+
+        # 1. Matolar ro'yxatidan nomiga mos mato ID sini izlash
+        fabric_id = None
+        fab_res = requests.get(f"{API_BASE_URL}fabrics/", timeout=15)
+        if fab_res.status_code == 200:
+            fabrics = fab_res.json()
+            for f in fabrics:
+                f_title = f.get('title') or f.get('name') or ''
+                if f_title.lower().strip() == fabric_name.lower().strip():
+                    fabric_id = f.get('id')
+                    break
+
+        # 2. Agar mato bazada hali bo'lmasa, uni avval yangi mato sifatida yaratamiz
+        if not fabric_id:
+            create_fab = requests.post(
+                f"{API_BASE_URL}fabrics/",
+                json={'title': fabric_name, 'name': fabric_name, 'quantity': 0},
+                timeout=15
+            )
+            if create_fab.status_code in [200, 201]:
+                fabric_id = create_fab.json().get('id')
+
+        # 3. Buyurtma payload'ini tayyorlash
+        payload = {
+            'client_name': client_name,
+            'client': client_name,
+            'title': f"{client_name} - {fabric_name}",
+            'fabric_name': fabric_name,
+            'target_kg': quantity,
+            'quantity': quantity,
+            'quantity_kg': quantity,
+            'status': 'pending'
+        }
+
+        # Django ForeignKey kutilayotgan ID ni yuboramiz
+        if fabric_id:
+            payload['fabric'] = fabric_id
+
+        response = requests.post(f"{API_BASE_URL}orders/", json=payload, timeout=15)
+        if response.status_code in [200, 201]:
+            bot.send_message(
+                chat_id,
+                f"✅ **Buyurtma muvaffaqiyatli saqlandi!**\n\n📋 Mijoz: **{client_name}**\n🏭 Mato: **{fabric_name}**\n⚖️ Reja: **{quantity} kg**",
+                reply_markup=get_main_keyboard(),
+                parse_mode='Markdown'
+            )
+        else:
+            bot.send_message(
+                chat_id,
+                f"❌ Saqlashda xatolik yuz berdi (API status: {response.status_code}):\n{response.text}",
+                reply_markup=get_main_keyboard()
+            )
+    except ValueError:
+        msg = bot.send_message(chat_id, "⚠️ Iltimos, miqdorni faqat sonlarda kiriting (Masalan: 5000):")
+        bot.register_next_step_handler(msg, process_order_quantity)
+    except requests.exceptions.Timeout:
+        bot.send_message(
+            chat_id,
+            "⏳ Server javob berishda kechikmoqda, qaytadan urinib ko'ring.",
+            reply_markup=get_main_keyboard()
+        )
+    except Exception as e:
+        bot.send_message(chat_id, f"⚠️ Server bilan ulanishda xatolik: {e}", reply_markup=get_main_keyboard())
+
+
+# --- QO'SHIMCHA FUNKSIYALAR ---
 def check_api_status(message):
     try:
-        response = requests.get(API_BASE_URL.replace('/api/', '/'), timeout=5)
+        response = requests.get(API_BASE_URL.replace('/api/', '/'), timeout=15)
         if response.status_code == 200:
             bot.send_message(message.chat.id, "🟢 **ModulX API tizimi barqaror ishlamoqda!**",
                              reply_markup=get_main_keyboard(), parse_mode='Markdown')
         else:
             bot.send_message(message.chat.id, f"⚠️ API javob statusi: {response.status_code}",
                              reply_markup=get_main_keyboard())
+    except requests.exceptions.Timeout:
+        bot.send_message(message.chat.id, "⏳ API ulanish taym-auti (server uyquda bo'lishi mumkin).", reply_markup=get_main_keyboard())
     except Exception as e:
         bot.send_message(message.chat.id, f"🔴 API ga ulanishda xatolik: {e}", reply_markup=get_main_keyboard())
 
