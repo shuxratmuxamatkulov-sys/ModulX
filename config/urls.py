@@ -18,44 +18,42 @@ from production.views import ProductionRecipeViewSet, ProductionOrderViewSet
 
 router = DefaultRouter()
 
-# Inventory yo'nalishlari
+# Inventory (Ombor) yo'nalishlari
 router.register(r'yarns', YarnViewSet, basename='yarn')
 router.register(r'fabrics', FabricViewSet, basename='fabric')
 
-# Production yo'nalishlari
+# Production (Ishlab chiqarish) yo'nalishlari
 router.register(r'recipes', ProductionRecipeViewSet, basename='recipe')
 router.register(r'orders', ProductionOrderViewSet, basename='order')
 
-# Finance yo'nalishlari
+# Finance (Moliya) yo'nalishlari
 router.register(r'accounts', AccountViewSet, basename='account')
 router.register(r'transactions', TransactionViewSet, basename='transaction')
 
 
-# Asosiy sahifa uchun oddiy funksiya
+# Asosiy sahifa uchun tezkor status ko'rsatkichi
 def home_view(request):
-  return JsonResponse({'message': 'ModulX API muvaffaqiyatli ishlamoqda!'})
+    return JsonResponse({
+        'status': 'online',
+        'message': 'ModulX ERP API muvaffaqiyatli ishlamoqda!',
+        'documentation': '/api/docs/'
+    })
 
 
 urlpatterns = [
     # Asosiy sahifa
     path('', home_view, name='home'),
     path('admin/', admin.site.urls),
+
+    # Barcha REST API yo'nalishlari (Yarns, Fabrics, Recipes, Orders, Accounts, Transactions)
     path('api/', include(router.urls)),
-    # JWT Token olish va yangilash manzillari
+
+    # JWT Token olish va yangilash (Telegram Bot va boshqa servislar uchun)
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path(
-        'api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'
-    ),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
     # Swagger va OpenAPI Schema yo'nalishlari
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path(
-        'api/docs/',
-        SpectacularSwaggerView.as_view(url_name='schema'),
-        name='swagger-ui',
-    ),
-    path(
-        'api/redoc/',
-        SpectacularRedocView.as_view(url_name='schema'),
-        name='redoc',
-    ),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
