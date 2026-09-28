@@ -80,7 +80,28 @@ def get_fabrics(message):
             bot.reply_to(message, "❌ Mato ombori ma'lumotlarini olib bo'lmadi.")
     except Exception as e:
         bot.reply_to(message, f"⚠️ Ulanishda xatolik: {e}")
+@bot.message_handler(commands=['orders'])
+def get_orders(message):
+    try:
+        response = requests.get(f"{API_BASE_URL}orders/", timeout=5)
+        if response.status_code == 200:
+            orders = response.json()
+            if not orders:
+                bot.reply_to(message, "📦 Ishlab chiqarish buyurtmalari hozircha yo'q.")
+                return
 
+            text = "📋 **Ishlab chiqarish buyurtmalari:**\n\n"
+            for item in orders:
+                order_id = item.get('id', '')
+                status = item.get('status', 'Noma\'lum')
+                quantity = item.get('quantity') or item.get('amount') or 0
+                text += f"• **Buyurtma #{order_id}**: {quantity} kg/rulon | Status: {status}\n"
+
+            bot.reply_to(message, text, parse_mode='Markdown')
+        else:
+            bot.reply_to(message, f"❌ API xatosi (Status code: {response.status_code})")
+    except Exception as e:
+        bot.reply_to(message, f"⚠️ Ulanishda xatolik: {e}")
 
 if __name__ == '__main__':
     print("ModulX Telegram boti ishga tushdi...")
