@@ -19,7 +19,7 @@ class ProductionOrder(models.Model):
         ('cancelled', 'Bekor qilindi'),
     )
     client_name = models.CharField(max_length=255, blank=True, null=True, verbose_name="Buyurtmachi nomi")
-    fabric = models.CharField(max_length=255, verbose_name="Mato nomi")  # <-- ForeignKey o'rniga CharField qilindi
+    fabric = models.CharField(max_length=255, verbose_name="Mato nomi")
     target_kg = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Rejalashtirilgan mato (kg)")
     actual_kg = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Amaldagi mato (kg)")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -34,17 +34,17 @@ class ProductionOrder(models.Model):
 # ==========================================
 
 class Order(models.Model):
-    date = models.DateField(verbose_name="Sana")
-    client_name = models.CharField(max_length=255, verbose_name="Buyurtmachi nomi")
-    order_name = models.CharField(max_length=255, verbose_name="Buyurtma nomi")
-    fabric_name = models.CharField(max_length=255, verbose_name="Mato nomi")
-    density_finish = models.CharField(max_length=100, verbose_name="Gr/m2 Iplik bo'yi (Finish)")
-    width_type = models.CharField(max_length=100, verbose_name="Eni (Tup/Mayli/Acik)")
-    machine_type = models.CharField(max_length=100, verbose_name="Dastgoh turi")
-    quantity_kg = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Buyurtma miqdori (kg)")
-    service_or_sale = models.CharField(max_length=100, verbose_name="Xizmat yoki Sotish")
-    price_per_kg = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Xizmat/Sotish 1 kg narxi ($)")
-    total_amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Buyurtma summasi ($)")
+    date = models.DateField(verbose_name="Sana", blank=True, null=True)
+    client_name = models.CharField(max_length=255, verbose_name="Buyurtmachi nomi", blank=True, null=True)
+    order_name = models.CharField(max_length=255, verbose_name="Buyurtma nomi", blank=True, null=True)
+    fabric_name = models.CharField(max_length=255, verbose_name="Mato nomi", blank=True, null=True)
+    density_finish = models.CharField(max_length=100, verbose_name="Gr/m2 Iplik bo'yi (Finish)", blank=True, null=True)
+    width_type = models.CharField(max_length=100, verbose_name="Eni (Tup/Mayli/Acik)", blank=True, null=True)
+    machine_type = models.CharField(max_length=100, verbose_name="Dastgoh turi", blank=True, null=True)
+    quantity_kg = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Buyurtma miqdori (kg)", blank=True, null=True)
+    service_or_sale = models.CharField(max_length=100, verbose_name="Xizmat yoki Sotish", blank=True, null=True)
+    price_per_kg = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Xizmat/Sotish 1 kg narxi ($)", blank=True, null=True)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Buyurtma summasi ($)", blank=True, null=True)
     note = models.TextField(blank=True, null=True, verbose_name="Izoh")
 
     def __str__(self):
