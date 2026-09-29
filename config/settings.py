@@ -147,7 +147,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated', # <-- Barcha API'lar uchun avtorizatsiyani majburiy qilish
+        'rest_framework.permissions.AllowAny', # <-- Barcha API'lar uchun avtorizatsiyani majburiy qilish
     ),
 }
 
