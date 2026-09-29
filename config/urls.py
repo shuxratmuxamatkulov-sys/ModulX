@@ -14,7 +14,17 @@ from rest_framework_simplejwt.views import (
 
 from finance.views import AccountViewSet, TransactionViewSet
 from inventory.views import YarnViewSet, FabricViewSet
-from production.views import ProductionRecipeViewSet, ProductionOrderViewSet
+from production.views import (
+    ProductionRecipeViewSet,
+    ProductionOrderViewSet,
+    OrderViewSet,
+    YarnIncomeViewSet,
+    YarnIssueViewSet,
+    YarnReturnViewSet,
+    YarnRefundToClientViewSet,
+    FabricIncomeViewSet,
+    FabricDispatchViewSet
+)
 
 router = DefaultRouter()
 
@@ -22,9 +32,16 @@ router = DefaultRouter()
 router.register(r'yarns', YarnViewSet, basename='yarn')
 router.register(r'fabrics', FabricViewSet, basename='fabric')
 
-# Production (Ishlab chiqarish) yo'nalishlari
+# Production (Ishlab chiqarish va Harakatlar) yo'nalishlari
 router.register(r'recipes', ProductionRecipeViewSet, basename='recipe')
-router.register(r'orders', ProductionOrderViewSet, basename='order')
+router.register(r'production-orders', ProductionOrderViewSet, basename='production-order')
+router.register(r'orders', OrderViewSet, basename='order')
+router.register(r'yarn-incomes', YarnIncomeViewSet, basename='yarn-income')
+router.register(r'yarn-issues', YarnIssueViewSet, basename='yarn-issue')
+router.register(r'yarn-returns', YarnReturnViewSet, basename='yarn-return')
+router.register(r'yarn-refunds', YarnRefundToClientViewSet, basename='yarn-refund')
+router.register(r'fabric-incomes', FabricIncomeViewSet, basename='fabric-income')
+router.register(r'fabric-dispatches', FabricDispatchViewSet, basename='fabric-dispatch')
 
 # Finance (Moliya) yo'nalishlari
 router.register(r'accounts', AccountViewSet, basename='account')
@@ -45,7 +62,7 @@ urlpatterns = [
     path('', home_view, name='home'),
     path('admin/', admin.site.urls),
 
-    # Barcha REST API yo'nalishlari (Yarns, Fabrics, Recipes, Orders, Accounts, Transactions)
+    # Barcha REST API yo'nalishlari
     path('api/', include(router.urls)),
 
     # JWT Token olish va yangilash (Telegram Bot va boshqa servislar uchun)
